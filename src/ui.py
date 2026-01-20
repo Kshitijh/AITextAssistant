@@ -139,7 +139,7 @@ class MainWindow(QMainWindow):
         main_layout.setContentsMargins(20, 20, 20, 20)
         
         # Title
-        title_label = QLabel("🤖 AI Text Assistant")
+        title_label = QLabel("🤖 AI Document Assistant")
         title_font = QFont("Arial", 18, QFont.Bold)
         title_label.setFont(title_font)
         title_label.setAlignment(Qt.AlignCenter)
@@ -405,7 +405,7 @@ class MainWindow(QMainWindow):
             # Load models if not already loaded
             self._log("Loading models...")
             
-            if self.embedder.model is None:
+            if self.embedder.vectorizer is None:
                 self.embedder.load_model()
             
             if self.suggestion_engine and not self.suggestion_engine._is_loaded:
