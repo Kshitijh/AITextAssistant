@@ -1,0 +1,82 @@
+# AI Text Assistant Configuration
+
+# Document Processing
+documents:
+  folder_path: "./data"
+  supported_formats:
+    - pdf
+    - docx
+    - txt
+  chunk_size: 750
+  chunk_overlap: 100
+
+# Embedding Model
+embedding:
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  device: "cpu"
+  batch_size: 32
+
+# Vector Store
+vector_store:
+  index_path: "./models/faiss_index"
+  dimension: 384
+  metric: "cosine"
+
+# LLM Configuration
+llm:
+  # Options: "gpt4all", "llamacpp"
+  backend: "gpt4all"
+  model_path: "./models/gpt4all-model.bin"
+  model_name: "orca-mini-3b-gguf2-q4_0.gguf"
+  temperature: 0.7
+  max_tokens: 100
+  top_k: 40
+  top_p: 0.9
+  context_window: 2048
+
+# RAG Configuration
+rag:
+  top_k_results: 3
+  similarity_threshold: 0.5
+  max_context_length: 1500
+
+# Keystroke Listener
+listener:
+  context_window_size: 200
+  trigger_threshold: 10
+  debounce_ms: 300
+  excluded_apps:
+    - "cmd.exe"
+    - "powershell.exe"
+
+# Suggestion Overlay
+overlay:
+  font_size: 12
+  font_family: "Consolas"
+  opacity: 0.95
+  max_suggestions: 3
+  accept_key: "tab"
+  dismiss_key: "esc"
+  position_offset_x: 20
+  position_offset_y: 20
+
+# UI Settings
+ui:
+  theme: "dark"
+  window_width: 800
+  window_height: 600
+  enable_logging_view: true
+
+# Logging
+logging:
+  level: "INFO"
+  file_path: "./logs/app.log"
+  max_file_size: "10MB"
+  backup_count: 5
+
+# Performance
+performance:
+  use_gpu: false
+  num_threads: 4
+  cache_embeddings: true
+  cache_size_mb: 512

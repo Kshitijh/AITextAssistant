@@ -1,0 +1,41 @@
+# AI Text Assistant Requirements
+
+# Core ML/AI
+sentence-transformers
+faiss-cpu
+gpt4all
+transformers
+torch
+
+# Document Processing
+PyMuPDF
+python-docx
+pypdf2
+
+# Text Processing
+nltk
+spacy
+
+# UI Framework
+PyQt5
+PyQt5-Qt5
+PyQt5-sip
+
+# System Integration
+pynput
+keyboard
+pywin32
+
+# Configuration & Utilities
+PyYAML
+python-dotenv
+
+# Logging & Monitoring
+loguru
+
+# Data Handling
+numpy
+pandas
+
+# Performance
+psutil
