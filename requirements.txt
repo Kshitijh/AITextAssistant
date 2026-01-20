@@ -1,41 +1,37 @@
-# AI Text Assistant Requirements
+# AI Text Assistant Requirements - Lightweight Version
+# No PyTorch dependencies - Python 3.14+ compatible
 
-# Core ML/AI
-sentence-transformers
-faiss-cpu
-gpt4all
-transformers
-torch
+# Core ML/AI - Lightweight alternatives (binary wheels only)
+scikit-learn>=1.3.0
+joblib>=1.3.0
 
 # Document Processing
-PyMuPDF
-python-docx
-pypdf2
+PyMuPDF==1.25.4
+python-docx==1.1.2
+pypdf2==3.0.1
 
-# Text Processing
-nltk
-spacy
+# Text Processing (Optional - not currently used)
+# nltk==3.9.1
+# spacy==3.8.11
 
-# UI Framework
-PyQt5
-PyQt5-Qt5
-PyQt5-sip
+# UI Framework (using PySide6 - better Python 3.14+ support)
+PySide6>=6.6.0
 
 # System Integration
-pynput
-keyboard
-pywin32
+pynput==1.7.6
+keyboard==0.13.5
+pywin32==311
 
 # Configuration & Utilities
-PyYAML
-python-dotenv
+PyYAML==6.0.1
+python-dotenv==1.0.0
 
 # Logging & Monitoring
-loguru
+loguru==0.7.2
 
 # Data Handling
-numpy
-pandas
+numpy>=1.24.0
+scipy>=1.10.0
 
 # Performance
 psutil

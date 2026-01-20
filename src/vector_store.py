@@ -1,6 +1,6 @@
 """
 Vector Store Module
-Handles FAISS vector database for semantic search.
+Handles vector database for semantic search using sklearn's NearestNeighbors.
 """
 
 import os
@@ -8,7 +8,7 @@ import pickle
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 import numpy as np
-import faiss
+from sklearn.neighbors import NearestNeighbors
 from loguru import logger
 
 from src.config import config
@@ -16,8 +16,8 @@ from src.config import config
 
 class VectorStore:
     """
-    FAISS-based vector store for efficient semantic search.
-    Stores document embeddings and enables fast similarity search.
+    Sklearn NearestNeighbors-based vector store for efficient semantic search.
+    Lightweight alternative to FAISS - no external dependencies!
     """
     
     def __init__(self, index_path: Optional[str] = None, dimension: Optional[int] = None):
@@ -25,28 +25,31 @@ class VectorStore:
         Initialize the vector store.
         
         Args:
-            index_path: Path to save/load the FAISS index
+            index_path: Path to save/load the index
             dimension: Dimension of the embedding vectors
         """
         self.index_path = Path(index_path or config.vector_store_path)
         self.dimension = dimension or config.vector_dimension
-        self.index: Optional[faiss.Index] = None
+        self.index: Optional[NearestNeighbors] = None
         self.documents: List[Dict] = []
+        self.embeddings_matrix: Optional[np.ndarray] = None
         self._is_trained = False
         
     def create_index(self) -> None:
-        """Create a new FAISS index."""
+        """Create a new NearestNeighbors index."""
         try:
-            logger.info(f"Creating FAISS index with dimension {self.dimension}")
+            logger.info(f"Creating NearestNeighbors index")
             
-            # Use IndexFlatL2 for exact search with L2 distance
-            # For cosine similarity, we normalize vectors before adding
-            self.index = faiss.IndexFlatL2(self.dimension)
-            self._is_trained = True
+            # Use cosine similarity
+            self.index = NearestNeighbors(
+                n_neighbors=10,
+                algorithm='brute',
+                metric='cosine'
+            )
             
-            logger.info("FAISS index created successfully")
+            logger.info("NearestNeighbors index created successfully")
         except Exception as e:
-            logger.error(f"Error creating FAISS index: {e}")
+            logger.error(f"Error creating index: {e}")
             raise
     
     def add_documents(self, documents: List[Dict]) -> None:
@@ -63,18 +66,22 @@ class VectorStore:
             # Extract embeddings
             embeddings = np.array([doc['embedding'] for doc in documents], dtype=np.float32)
             
-            # Normalize embeddings for cosine similarity
-            faiss.normalize_L2(embeddings)
+            # Store embeddings matrix
+            if self.embeddings_matrix is None:
+                self.embeddings_matrix = embeddings
+            else:
+                self.embeddings_matrix = np.vstack([self.embeddings_matrix, embeddings])
             
-            # Add to index
-            self.index.add(embeddings)
+            # Fit the index
+            self.index.fit(self.embeddings_matrix)
+            self._is_trained = True
             
             # Store document metadata (without embeddings to save memory)
             for doc in documents:
                 doc_copy = {k: v for k, v in doc.items() if k != 'embedding'}
                 self.documents.append(doc_copy)
             
-            logger.info(f"Added {len(documents)} documents to index. Total: {self.index.ntotal}")
+            logger.info(f"Added {len(documents)} documents to index. Total: {len(self.documents)}")
         except Exception as e:
             logger.error(f"Error adding documents to index: {e}")
             raise
@@ -92,29 +99,27 @@ class VectorStore:
         Returns:
             List of similar documents with scores
         """
-        if self.index is None or self.index.ntotal == 0:
+        if self.index is None or not self._is_trained or len(self.documents) == 0:
             logger.warning("Index is empty or not initialized")
             return []
         
         try:
-            # Normalize query embedding
+            # Reshape query
             query_embedding = query_embedding.reshape(1, -1).astype(np.float32)
-            faiss.normalize_L2(query_embedding)
             
             # Search
-            k = min(k, self.index.ntotal)
-            distances, indices = self.index.search(query_embedding, k)
+            k = min(k, len(self.documents))
+            distances, indices = self.index.kneighbors(query_embedding, n_neighbors=k)
             
-            # Convert distances to similarity scores (for L2 distance on normalized vectors)
-            # similarity = 1 - (distance^2 / 2)
-            similarities = 1 - (distances[0] ** 2 / 2)
+            # Convert distances to similarity scores (1 - cosine distance)
+            similarities = 1 - distances[0]
             
             # Build results
             results = []
             threshold = threshold or config.rag_similarity_threshold
             
             for idx, similarity in zip(indices[0], similarities):
-                if idx != -1 and similarity >= threshold:
+                if similarity >= threshold:
                     doc = self.documents[idx].copy()
                     doc['similarity'] = float(similarity)
                     results.append(doc)
@@ -128,7 +133,7 @@ class VectorStore:
     
     def save_index(self, custom_path: Optional[str] = None) -> None:
         """
-        Save the FAISS index and documents to disk.
+        Save the index and documents to disk.
         
         Args:
             custom_path: Custom path to save index (optional)
@@ -141,15 +146,13 @@ class VectorStore:
         save_path.parent.mkdir(parents=True, exist_ok=True)
         
         try:
-            # Save FAISS index
-            index_file = str(save_path) + '.faiss'
-            faiss.write_index(self.index, index_file)
-            
-            # Save documents metadata
-            docs_file = str(save_path) + '.pkl'
-            with open(docs_file, 'wb') as f:
+            # Save everything as pickle
+            save_file = str(save_path) + '.pkl'
+            with open(save_file, 'wb') as f:
                 pickle.dump({
+                    'index': self.index,
                     'documents': self.documents,
+                    'embeddings_matrix': self.embeddings_matrix,
                     'dimension': self.dimension
                 }, f)
             
@@ -160,7 +163,7 @@ class VectorStore:
     
     def load_index(self, custom_path: Optional[str] = None) -> bool:
         """
-        Load the FAISS index and documents from disk.
+        Load the index and documents from disk.
         
         Args:
             custom_path: Custom path to load index from (optional)
@@ -169,21 +172,19 @@ class VectorStore:
             True if successful, False otherwise
         """
         load_path = Path(custom_path) if custom_path else self.index_path
-        index_file = str(load_path) + '.faiss'
-        docs_file = str(load_path) + '.pkl'
+        load_file = str(load_path) + '.pkl'
         
-        if not Path(index_file).exists() or not Path(docs_file).exists():
-            logger.warning(f"Index files not found at {load_path}")
+        if not Path(load_file).exists():
+            logger.warning(f"Index file not found at {load_file}")
             return False
         
         try:
-            # Load FAISS index
-            self.index = faiss.read_index(index_file)
-            
-            # Load documents metadata
-            with open(docs_file, 'rb') as f:
+            # Load everything from pickle
+            with open(load_file, 'rb') as f:
                 data = pickle.load(f)
+                self.index = data['index']
                 self.documents = data['documents']
+                self.embeddings_matrix = data['embeddings_matrix']
                 self.dimension = data['dimension']
             
             self._is_trained = True
@@ -198,6 +199,7 @@ class VectorStore:
         """Clear the index and all documents."""
         self.index = None
         self.documents = []
+        self.embeddings_matrix = None
         self._is_trained = False
         logger.info("Index cleared")
     
@@ -217,5 +219,5 @@ class VectorStore:
             'document_count': self.document_count,
             'dimension': self.dimension,
             'is_trained': self._is_trained,
-            'index_size': self.index.ntotal if self.index else 0
+            'index_size': len(self.documents)
         }

@@ -1,11 +1,14 @@
 """
 Embedder Module
-Handles text embedding using sentence-transformers.
+Handles text embedding using TF-IDF (lightweight alternative to sentence-transformers).
 """
 
 from typing import List, Optional
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import joblib
+from pathlib import Path
 from loguru import logger
 
 from src.config import config
@@ -13,46 +16,50 @@ from src.config import config
 
 class Embedder:
     """
-    Text embedding generator using sentence-transformers.
-    Converts text into dense vector representations for semantic search.
+    Text embedding generator using TF-IDF vectorization.
+    Lightweight alternative to sentence-transformers - no PyTorch required!
     """
     
     def __init__(self, model_name: Optional[str] = None, device: Optional[str] = None):
         """
-        Initialize the embedder with a sentence-transformer model.
+        Initialize the embedder with TF-IDF vectorizer.
         
         Args:
-            model_name: Name of the sentence-transformer model
-            device: Device to run the model on ('cpu' or 'cuda')
+            model_name: Not used in TF-IDF version (kept for compatibility)
+            device: Not used in TF-IDF version (kept for compatibility)
         """
-        self.model_name = model_name or config.embedding_model_name
-        self.device = device or config.embedding_device
-        self.model: Optional[SentenceTransformer] = None
+        self.model_name = "TF-IDF"
+        self.device = "cpu"
+        self.vectorizer: Optional[TfidfVectorizer] = None
         self._embedding_dim: Optional[int] = None
+        self._is_fitted = False
         
     def load_model(self) -> None:
-        """Load the sentence-transformer model."""
+        """Initialize the TF-IDF vectorizer."""
         try:
-            logger.info(f"Loading embedding model: {self.model_name}")
-            self.model = SentenceTransformer(self.model_name, device=self.device)
+            logger.info("Initializing TF-IDF vectorizer...")
             
-            # Get embedding dimension
-            test_embedding = self.model.encode("test", show_progress_bar=False)
-            self._embedding_dim = len(test_embedding)
+            # Create TF-IDF vectorizer with optimized parameters
+            self.vectorizer = TfidfVectorizer(
+                max_features=384,  # Match original embedding dimension
+                ngram_range=(1, 2),  # Unigrams and bigrams
+                min_df=1,
+                max_df=0.95,
+                sublinear_tf=True,
+                strip_accents='unicode',
+                lowercase=True
+            )
             
-            logger.info(f"Model loaded successfully. Embedding dimension: {self._embedding_dim}")
+            self._embedding_dim = 384
+            logger.info("TF-IDF vectorizer initialized successfully")
         except Exception as e:
-            logger.error(f"Error loading embedding model: {e}")
+            logger.error(f"Error initializing TF-IDF vectorizer: {e}")
             raise
     
     @property
     def embedding_dimension(self) -> int:
         """Get the dimension of the embeddings."""
-        if self._embedding_dim is None:
-            if self.model is None:
-                self.load_model()
-            # Dimension should be set after loading
-        return self._embedding_dim or 384  # Default fallback
+        return self._embedding_dim or 384
     
     def embed_text(self, text: str) -> np.ndarray:
         """
@@ -64,11 +71,16 @@ class Embedder:
         Returns:
             Embedding vector as numpy array
         """
-        if self.model is None:
+        if self.vectorizer is None:
             self.load_model()
         
+        if not self._is_fitted:
+            logger.warning("Vectorizer not fitted yet. Fitting on single text.")
+            self.vectorizer.fit([text])
+            self._is_fitted = True
+        
         try:
-            embedding = self.model.encode(text, show_progress_bar=False, convert_to_numpy=True)
+            embedding = self.vectorizer.transform([text]).toarray()[0]
             return embedding
         except Exception as e:
             logger.error(f"Error generating embedding: {e}")
@@ -80,24 +92,25 @@ class Embedder:
         
         Args:
             texts: List of input texts
-            batch_size: Batch size for processing
+            batch_size: Not used (kept for compatibility)
             
         Returns:
             Array of embeddings
         """
-        if self.model is None:
+        if self.vectorizer is None:
             self.load_model()
         
-        batch_size = batch_size or config.embedding_batch_size
-        
         try:
-            logger.info(f"Generating embeddings for {len(texts)} texts...")
-            embeddings = self.model.encode(
-                texts,
-                batch_size=batch_size,
-                show_progress_bar=True,
-                convert_to_numpy=True
-            )
+            logger.info(f"Fitting TF-IDF on {len(texts)} texts...")
+            
+            # Fit on all texts
+            self.vectorizer.fit(texts)
+            self._is_fitted = True
+            
+            # Transform to embeddings
+            logger.info(f"Generating TF-IDF embeddings...")
+            embeddings = self.vectorizer.transform(texts).toarray()
+            
             logger.info(f"Generated {len(embeddings)} embeddings")
             return embeddings
         except Exception as e:
@@ -134,13 +147,29 @@ class Embedder:
         Returns:
             Cosine similarity score (0 to 1)
         """
-        # Normalize vectors
-        norm1 = np.linalg.norm(embedding1)
-        norm2 = np.linalg.norm(embedding2)
+        # Reshape for sklearn
+        emb1 = embedding1.reshape(1, -1)
+        emb2 = embedding2.reshape(1, -1)
         
-        if norm1 == 0 or norm2 == 0:
-            return 0.0
-        
-        # Cosine similarity
-        similarity = np.dot(embedding1, embedding2) / (norm1 * norm2)
+        similarity = cosine_similarity(emb1, emb2)[0][0]
         return float(similarity)
+    
+    def save_vectorizer(self, path: str) -> None:
+        """Save the fitted vectorizer to disk."""
+        if self.vectorizer and self._is_fitted:
+            Path(path).parent.mkdir(parents=True, exist_ok=True)
+            joblib.dump(self.vectorizer, path)
+            logger.info(f"Vectorizer saved to {path}")
+    
+    def load_vectorizer(self, path: str) -> bool:
+        """Load a fitted vectorizer from disk."""
+        if Path(path).exists():
+            try:
+                self.vectorizer = joblib.load(path)
+                self._is_fitted = True
+                logger.info(f"Vectorizer loaded from {path}")
+                return True
+            except Exception as e:
+                logger.error(f"Error loading vectorizer: {e}")
+                return False
+        return False

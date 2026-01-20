@@ -7,13 +7,13 @@ import sys
 import os
 from pathlib import Path
 from typing import Optional
-from PyQt5.QtWidgets import (
+from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QFileDialog, QTextEdit, QProgressBar,
     QStatusBar, QGroupBox, QMessageBox
 )
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QTimer
-from PyQt5.QtGui import QFont, QIcon
+from PySide6.QtCore import Qt, QThread, Signal, QTimer
+from PySide6.QtGui import QFont, QIcon
 from loguru import logger
 
 from src.config import config
@@ -28,8 +28,8 @@ from src.suggestion_overlay import SuggestionOverlay
 class IndexBuilderThread(QThread):
     """Worker thread for building the document index."""
     
-    progress = pyqtSignal(str)
-    finished = pyqtSignal(bool, str)
+    progress = Signal(str)
+    finished = Signal(bool, str)
     
     def __init__(self, folder_path: str, embedder: Embedder, vector_store: VectorStore):
         super().__init__()

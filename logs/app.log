@@ -1,0 +1,11 @@
+2026-01-20 12:51:45 | INFO     | __main__:setup_logging - ============================================================
+2026-01-20 12:51:45 | INFO     | __main__:setup_logging - AI Text Assistant Starting...
+2026-01-20 12:51:45 | INFO     | __main__:setup_logging - ============================================================
+2026-01-20 12:51:45 | INFO     | __main__:main - Documents folder: ./data
+2026-01-20 12:51:45 | INFO     | __main__:main - Vector store path: ./models/faiss_index
+2026-01-20 12:51:45 | INFO     | __main__:main - LLM backend: gpt4all
+2026-01-20 12:51:45 | INFO     | __main__:main - Embedding model: sentence-transformers/all-MiniLM-L6-v2
+2026-01-20 12:51:45 | INFO     | src.ui:_init_components - Initializing components...
+2026-01-20 12:51:45 | INFO     | src.ui:_init_components - Components initialized
+2026-01-20 12:51:45 | WARNING  | src.vector_store:load_index - Index file not found at models\faiss_index.pkl
+2026-01-20 12:51:45 | INFO     | src.ui:_log - No existing index found. Please build one.

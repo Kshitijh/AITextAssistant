@@ -5,9 +5,9 @@ Floating window that displays autocomplete suggestions near the cursor.
 
 import sys
 from typing import List, Optional
-from PyQt5.QtWidgets import QWidget, QLabel, QVBoxLayout, QApplication
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal
-from PyQt5.QtGui import QFont, QCursor
+from PySide6.QtWidgets import QWidget, QLabel, QVBoxLayout, QApplication
+from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtGui import QFont, QCursor
 from loguru import logger
 
 from src.config import config
@@ -18,8 +18,8 @@ class SuggestionOverlay(QWidget):
     Floating overlay window that displays text suggestions near the cursor.
     """
     
-    accepted = pyqtSignal(str)  # Signal emitted when suggestion is accepted
-    dismissed = pyqtSignal()     # Signal emitted when suggestion is dismissed
+    accepted = Signal(str)  # Signal emitted when suggestion is accepted
+    dismissed = Signal()     # Signal emitted when suggestion is dismissed
     
     def __init__(self):
         """Initialize the suggestion overlay."""
