@@ -1,0 +1,35 @@
+AI Text Assistant - Demo Document
+
+Machine Learning Basics
+
+Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience without being explicitly programmed.
+
+Types of Machine Learning:
+
+1. Supervised Learning
+   - Uses labeled training data
+   - Predicts outcomes for new data
+   - Examples: Classification, Regression
+
+2. Unsupervised Learning
+   - Works with unlabeled data
+   - Finds hidden patterns
+   - Examples: Clustering, Dimensionality Reduction
+
+3. Reinforcement Learning
+   - Learns through trial and error
+   - Receives rewards or penalties
+   - Examples: Game playing, Robotics
+
+Common Algorithms:
+- Linear Regression
+- Decision Trees
+- Neural Networks
+- Support Vector Machines
+- K-Means Clustering
+
+Applications:
+Machine learning is used in recommendation systems, image recognition, natural language processing, fraud detection, and autonomous vehicles.
+
+Getting Started:
+To begin with machine learning, learn Python, understand statistics, study linear algebra, and practice with real datasets.

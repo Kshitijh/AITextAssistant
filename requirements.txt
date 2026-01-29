@@ -1,41 +1,36 @@
-# AI Text Assistant Requirements
+# AI Text Assistant - Production Requirements
+# Python 3.9+
 
-# Core ML/AI
-sentence-transformers
-faiss-cpu
-gpt4all
-transformers
-torch
+# Core ML/AI - Embeddings & Vector Search
+sentence-transformers>=2.2.0
+faiss-cpu>=1.7.4
+torch>=2.0.0
+transformers>=4.30.0
 
 # Document Processing
-PyMuPDF
-python-docx
-pypdf2
-
-# Text Processing
-nltk
-spacy
+PyMuPDF>=1.23.0
+python-docx>=1.1.0
 
 # UI Framework
-PyQt5
-PyQt5-Qt5
-PyQt5-sip
+PySide6>=6.6.0
 
-# System Integration
-pynput
-keyboard
-pywin32
+# Online Search
+wikipedia>=1.4.0
+requests>=2.31.0
+beautifulsoup4>=4.12.0
 
 # Configuration & Utilities
-PyYAML
-python-dotenv
+PyYAML>=6.0.1
+python-dotenv>=1.0.0
 
-# Logging & Monitoring
-loguru
+# Logging
+loguru>=0.7.2
 
 # Data Handling
-numpy
-pandas
+numpy>=1.24.0
+pandas>=2.0.0
 
-# Performance
-psutil
+# Performance & Testing
+psutil>=5.9.0
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
