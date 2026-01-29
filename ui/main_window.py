@@ -289,19 +289,32 @@ class MainWindow(QMainWindow):
         context = self.editor.get_context(max_length=200)
         
         if len(context) > 10:  # Only suggest if meaningful context exists
-            suggestions = self.autocomplete.get_suggestions(context, num_suggestions=3)
-            self._display_suggestions(suggestions)
+            # Request more suggestions for richer content
+            suggestions = self.autocomplete.get_suggestions(context, num_suggestions=5)
+            self._display_suggestions(suggestions, context)
     
-    def _display_suggestions(self, suggestions: list):
-        """Display suggestions in info panel."""
+    def _display_suggestions(self, suggestions: list, context: str = ""):
+        """Display suggestions in info panel with enhanced formatting."""
         if suggestions:
-            display_text = "\n\n---\n\n".join(
-                f"{i+1}. {sugg}" for i, sugg in enumerate(suggestions)
-            )
+            display_parts = []
+            for i, sugg in enumerate(suggestions, 1):
+                # Format each suggestion with better visual separation
+                display_parts.append(f"━━━ Suggestion {i} ━━━\n{sugg}")
+            
+            display_text = "\n\n".join(display_parts)
             self.suggestions_display.setPlainText(display_text)
-            self.source_info_label.setText("Source: Local documents")
+            
+            # Show count and query hint
+            query_hint = context[-30:] if len(context) > 30 else context
+            self.source_info_label.setText(f"Found {len(suggestions)} suggestions for: ...{query_hint}")
         else:
-            self.suggestions_display.setPlainText("No suggestions available")
+            self.suggestions_display.setPlainText(
+                "No suggestions available.\n\n"
+                "💡 Tips:\n"
+                "• Type at least 10 characters\n"
+                "• Make sure documents are loaded\n"
+                "• Try lowering similarity threshold in config.yaml"
+            )
             self.source_info_label.setText("Source: -")
     
     def _on_selection_changed(self, selected_text: str):

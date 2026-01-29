@@ -131,21 +131,35 @@ class Autocomplete:
             if not text:
                 return None
             
-            # Extract relevant portion from result
-            # Simple approach: take first sentence or first N characters
+            # Extract more content - show multiple sentences or full paragraph
             sentences = text.split('. ')
             
             if sentences:
-                # Take first complete sentence
-                suggestion = sentences[0].strip()
+                # Take first 2-3 sentences for richer context
+                num_sentences = min(3, len(sentences))
+                suggestion_parts = []
                 
-                # Ensure it's not too long
-                max_length = 150
+                for i in range(num_sentences):
+                    sentence = sentences[i].strip()
+                    if sentence:
+                        suggestion_parts.append(sentence)
+                
+                suggestion = '. '.join(suggestion_parts)
+                if not suggestion.endswith('.'):
+                    suggestion += '.'
+                
+                # Allow longer suggestions for more content
+                max_length = 400
                 if len(suggestion) > max_length:
-                    suggestion = suggestion[:max_length].rsplit(' ', 1)[0] + '...'
+                    suggestion = suggestion[:max_length].rsplit('. ', 1)[0] + '.'
                 
                 # Don't suggest if it's too similar to existing context
                 if suggestion.lower() not in context.lower():
+                    # Add metadata for context
+                    metadata = result.get('metadata', {})
+                    source_file = metadata.get('file_name', '')
+                    if source_file:
+                        suggestion = f"[From: {source_file}]\n{suggestion}"
                     return suggestion
             
             return None
