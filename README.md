@@ -1,187 +1,216 @@
 # AI Text Assistant
 
-<div align="center">
+## 🎯 Project Purpose
 
-🤖 **A Local AI-Powered Writing Assistant**
+AI Text Assistant is a **local-first intelligent writing assistant** similar to GitHub Copilot, but trained exclusively on your personal documents. It provides real-time text suggestions and content generation based on semantic understanding of your document library, with online search as a secondary fallback.
 
-*Smart autocomplete suggestions based on your documents - works completely offline!*
+## ✨ Key Features
 
-</div>
-
----
-
-## 📋 Overview
-
-AI Text Assistant is a powerful desktop application that provides intelligent writing suggestions based on your own documents. It works like GitHub Copilot but for any text editor - Notepad, Word, VS Code, and more!
-
-### ✨ Key Features
-
-- 📚 **Document-Based Learning**: Analyzes PDF, DOCX, and TXT files
-- 🔍 **Semantic Search**: Uses embeddings and FAISS for intelligent context retrieval
-- 🤖 **Local LLM**: Runs GPT4All models completely offline
-- ⌨️ **Global Typing Detection**: Works across all applications
-- 💡 **Smart Suggestions**: RAG-powered completions that understand your documents
-- 🎨 **Modern UI**: Clean PyQt5 interface with dark mode
-- 🔒 **Privacy First**: Everything runs locally - no data leaves your machine
+- 📚 **Document Ingestion**: Automatically index PDF, DOCX, and TXT files
+- 🧠 **Semantic Search**: Uses sentence-transformers for high-quality embeddings
+- ⚡ **Real-time Suggestions**: Copilot-style autocomplete as you type
+- ✍️ **Text Refinement**: Select text and refine, expand, or get alternatives
+- 🎯 **Local-First Architecture**: Prioritizes your documents over online sources
+- 🌐 **Smart Fallback**: Only uses Wikipedia when local data is insufficient
+- 🖥️ **Desktop UI**: Clean PySide6-based interface
 
 ---
 
 ## 🏗️ Architecture
 
+### High-Level Architecture Diagram
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     AI Text Assistant                        │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
-│  │   Document   │  │   Embedder   │  │    Vector    │     │
-│  │    Loader    │─▶│ (Sentence-   │─▶│    Store     │     │
-│  │  (PDF/DOCX)  │  │ Transformers)│  │   (FAISS)    │     │
-│  └──────────────┘  └──────────────┘  └──────────────┘     │
-│         │                                      │            │
-│         ▼                                      ▼            │
-│  ┌──────────────────────────────────────────────────┐      │
-│  │          Suggestion Engine (RAG + LLM)           │      │
-│  │                   (GPT4All)                      │      │
-│  └──────────────────────────────────────────────────┘      │
-│         │                                      ▲            │
-│         ▼                                      │            │
-│  ┌──────────────┐                    ┌────────────────┐    │
-│  │  Suggestion  │                    │   Keystroke    │    │
-│  │   Overlay    │◀───────────────────│    Listener    │    │
-│  │   (PyQt5)    │                    │   (pynput)     │    │
-│  └──────────────┘                    └────────────────┘    │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+│                      UI Layer (PySide6)                     │
+│  ┌─────────────┐  ┌──────────────┐  ┌──────────────────┐   │
+│  │   Editor    │  │Generate Btn  │  │  Main Window     │   │
+│  └─────────────┘  └──────────────┘  └──────────────────┘   │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────────┐
+│              Application Controller                          │
+│  (Orchestrates all components)                              │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        ▼                  ▼                  ▼
+┌───────────────┐  ┌──────────────┐  ┌─────────────────┐
+│  Ingestion    │  │  Embeddings  │  │   Retrieval     │
+│  ┌─────────┐  │  │  ┌────────┐  │  │  ┌───────────┐  │
+│  │PDF Read │  │  │  │Embedder│  │  │  │Local Src  │  │
+│  │DOCX Read│  │  │  │Vector  │  │  │  │Online Src │  │
+│  │Chunker  │  │  │  │Store   │  │  │  │Ranker     │  │
+│  └─────────┘  │  │  └────────┘  │  │  └───────────┘  │
+└───────────────┘  └──────────────┘  └─────────────────┘
+                           │
+                           ▼
+                  ┌─────────────────┐
+                  │   Suggestion    │
+                  │  ┌───────────┐  │
+                  │  │Autocomplete│ │
+                  │  │Text Replacer│ │
+                  │  └───────────┘  │
+                  └─────────────────┘
 ```
+
+### Module Breakdown
+
+#### 1. **Ingestion Layer** (`ingestion/`)
+- **PDF Reader**: Extracts text from PDF files using PyMuPDF
+- **DOCX Reader**: Extracts text from Word documents using python-docx
+- **Text Chunker**: Intelligently splits text into semantic chunks with overlap
+
+#### 2. **Embeddings Layer** (`embeddings/`)
+- **Embedder**: Generates 384-dimensional embeddings using `all-MiniLM-L6-v2`
+- **Vector Store**: FAISS-based index for fast similarity search (<200ms)
+
+#### 3. **Retrieval Layer** (`retrieval/`)
+- **Local Search**: Searches indexed documents by semantic similarity
+- **Online Search**: Wikipedia fallback when local similarity < threshold
+- **Ranker**: Prioritizes results (local always first)
+
+#### 4. **Suggestion Layer** (`suggestion/`)
+- **Autocomplete**: Generates real-time text suggestions
+- **Text Replacer**: Refines, expands, or finds alternatives for selected text
+
+#### 5. **UI Layer** (`ui/`)
+- **Editor**: Enhanced QTextEdit with debounced change detection
+- **Generate Button**: Floating button for text operations
+- **Main Window**: Application shell with all controls
 
 ---
 
-## 🚀 Installation
+## 🚀 Setup Instructions
 
 ### Prerequisites
 
-- **Python 3.10+** (recommended: Python 3.11)
-- **Windows** (currently optimized for Windows)
-- **4GB+ RAM** (8GB recommended for better performance)
-- **2GB free disk space** (for models and index)
+- Python 3.9 or higher
+- 4GB+ RAM (for embedding model)
+- Windows, macOS, or Linux
 
-### Step 1: Clone or Download
+### Installation
+
+1. **Clone or download the project**:
+   ```bash
+   cd AITextAssistant
+   ```
+
+2. **Create a virtual environment**:
+   ```bash
+   python -m venv venv
+   
+   # Windows
+   venv\Scripts\activate
+   
+   # macOS/Linux
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Verify configuration**:
+   Edit `config.yaml` to adjust settings (optional).
+
+### Running the Application
 
 ```bash
-cd d:\Workspace\AITextAssistant
+python app.py
 ```
-
-### Step 2: Create Virtual Environment
-
-```powershell
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-```
-
-### Step 3: Install Dependencies
-
-```powershell
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-**Note**: Installation may take 10-15 minutes as it downloads the embedding model and dependencies.
-
-### Step 4: Download LLM Model
-
-The application uses GPT4All. On first run, it will automatically download the model (~2GB). You can also manually download:
-
-1. Visit: https://gpt4all.io/
-2. Download a model (recommended: `orca-mini-3b-gguf2-q4_0.gguf` or `mistral-7b-openorca.Q4_0.gguf`)
-3. Place in `d:\Workspace\AITextAssistant\models\`
-4. Update model name in [config.yaml](config.yaml)
 
 ---
 
-## 📖 Usage Guide
+## 📖 How to Use
 
-### 1️⃣ Add Your Documents
+### 1. Load Documents
 
-1. Place your documents (PDF, DOCX, TXT) in the `data` folder
-2. You can organize them in subfolders if needed
-3. Supported formats:
-   - **PDF**: Research papers, ebooks, reports
-   - **DOCX**: Word documents, templates
-   - **TXT**: Plain text notes, code, documentation
+1. Click **"📁 Load Documents"** button
+2. Select a folder containing PDF, DOCX, or TXT files
+3. Wait for indexing to complete (progress bar shows status)
 
-### 2️⃣ Launch the Application
+### 2. Get Real-Time Suggestions
 
-```powershell
-python main.py
-```
+1. Start typing in the editor
+2. Suggestions appear in the right panel after ~500ms
+3. Suggestions are based on semantic similarity to your documents
 
-### 3️⃣ Build the Index
+### 3. Refine Selected Text
 
-1. Click **"Build Index"** button
-2. Wait for processing (depends on document count)
-3. The app will:
-   - Extract text from all documents
-   - Split into chunks
-   - Generate embeddings
-   - Build FAISS vector database
-   - Save for future use
+1. Select text in the editor
+2. Click the **"✨ Generate"** button that appears
+3. Choose an action:
+   - **✍️ Refine Text**: Improve clarity/quality
+   - **📝 Expand Text**: Add more detail
+   - **🔄 Get Alternatives**: See alternative phrasings
 
-### 4️⃣ Start the Assistant
+### 4. Toggle Suggestions
 
-1. Click **"Start Assistant"** button
-2. The status will show: 🟢 **Running**
-3. Open any text editor (Notepad, Word, VS Code, etc.)
-4. Start typing...
-
-### 5️⃣ Using Suggestions
-
-- **Type naturally** - suggestions appear after punctuation
-- **TAB** - Accept current suggestion
-- **ESC** - Dismiss suggestions
-- **↑/↓** - Navigate multiple suggestions (if available)
+- Click **"💡 Suggestions: ON/OFF"** to enable/disable real-time suggestions
 
 ---
 
-## ⚙️ Configuration
+## ⚙️ How Prioritization Works (Local vs Online)
 
-Edit [config.yaml](config.yaml) to customize:
+### The Priority Logic
 
-### Document Processing
-```yaml
-documents:
-  folder_path: "./data"
-  chunk_size: 750          # Characters per chunk
-  chunk_overlap: 100       # Overlap between chunks
+```
+┌─────────────────────────────────────────────┐
+│  1. User types text                         │
+└────────────────┬────────────────────────────┘
+                 │
+                 ▼
+┌─────────────────────────────────────────────┐
+│  2. Search LOCAL documents                  │
+│     - Calculate similarity scores           │
+│     - Filter by threshold (default: 0.3)    │
+└────────────────┬────────────────────────────┘
+                 │
+        ┌────────┴────────┐
+        │                 │
+        ▼                 ▼
+┌──────────────┐   ┌──────────────────────────┐
+│ Found >= 1   │   │ Found 0 results          │
+│ local result │   │ OR score < threshold     │
+└──────┬───────┘   └──────┬───────────────────┘
+       │                  │
+       ▼                  ▼
+┌──────────────┐   ┌──────────────────────────┐
+│ USE LOCAL    │   │ 3. Search ONLINE         │
+│ ONLY         │   │    (Wikipedia)           │
+└──────────────┘   └──────┬───────────────────┘
+                          │
+                          ▼
+                   ┌──────────────────────────┐
+                   │ 4. Combine results:      │
+                   │    LOCAL first           │
+                   │    ONLINE second         │
+                   └──────────────────────────┘
 ```
 
-### Embedding Model
+### Configuration
+
+Edit `config.yaml` to adjust:
+
 ```yaml
-embedding:
-  model_name: "sentence-transformers/all-MiniLM-L6-v2"
-  device: "cpu"            # or "cuda" for GPU
+retrieval:
+  similarity_threshold: 0.3  # Lower = more lenient (0.0-1.0)
+  top_k_results: 5           # Number of results to return
+
+online_search:
+  enabled: true              # Set to false to disable online fallback
 ```
 
-### LLM Settings
-```yaml
-llm:
-  backend: "gpt4all"
-  model_name: "orca-mini-3b-gguf2-q4_0.gguf"
-  temperature: 0.7         # Creativity (0.0-1.0)
-  max_tokens: 100          # Max suggestion length
-```
+### Logging
 
-### Suggestion Behavior
-```yaml
-listener:
-  trigger_threshold: 10    # Characters before triggering
-  debounce_ms: 300        # Delay before suggestion
+All searches are logged with:
+- Similarity score
+- Source (local file name or "wikipedia")
+- Timestamp
 
-overlay:
-  font_size: 12
-  opacity: 0.95
-  max_suggestions: 3
-```
+Check `logs/app.log` for details.
 
 ---
 
@@ -189,196 +218,194 @@ overlay:
 
 ```
 AITextAssistant/
-├── main.py                     # Application entry point
+├── app.py                      # Main entry point
+├── app_controller.py           # Application orchestrator
 ├── config.yaml                 # Configuration file
 ├── requirements.txt            # Python dependencies
-├── README.md                   # This file
 │
-├── src/                        # Source code
+├── config/                     # Configuration management
 │   ├── __init__.py
-│   ├── config.py              # Configuration manager
-│   ├── document_loader.py     # Document parsing (PDF/DOCX/TXT)
-│   ├── embedder.py            # Sentence embeddings
-│   ├── vector_store.py        # FAISS vector database
-│   ├── suggestion_engine.py   # RAG + LLM generation
-│   ├── keystroke_listener.py  # Global keyboard capture
-│   ├── suggestion_overlay.py  # Floating suggestion window
-│   └── ui.py                  # Main PyQt5 interface
+│   └── settings.py             # Settings class
 │
-├── data/                       # Place your documents here
-│   └── .gitkeep
+├── ingestion/                  # Document processing
+│   ├── __init__.py
+│   ├── pdf_reader.py           # PDF extraction
+│   ├── docx_reader.py          # Word extraction
+│   └── chunker.py              # Text chunking
 │
-├── models/                     # LLM models and FAISS index
-│   └── .gitkeep
+├── embeddings/                 # Embedding generation
+│   ├── __init__.py
+│   ├── embedder.py             # Sentence transformer wrapper
+│   └── vector_store.py         # FAISS index manager
 │
-└── logs/                       # Application logs
-    └── .gitkeep
+├── retrieval/                  # Search & retrieval
+│   ├── __init__.py
+│   ├── local_search.py         # Local document search
+│   ├── online_search.py        # Wikipedia fallback
+│   └── ranker.py               # Result prioritization
+│
+├── suggestion/                 # Suggestion engine
+│   ├── __init__.py
+│   ├── autocomplete.py         # Real-time suggestions
+│   └── text_replacer.py        # Text refinement
+│
+├── ui/                         # User interface
+│   ├── __init__.py
+│   ├── editor.py               # Text editor widget
+│   ├── generate_button.py      # Floating button
+│   └── main_window.py          # Main application window
+│
+├── tests/                      # Unit tests
+│   ├── __init__.py
+│   ├── test_ingestion.py
+│   ├── test_embeddings.py
+│   └── test_retrieval.py
+│
+├── data/                       # Sample documents
+│   ├── sample_python.txt
+│   └── sample_ml.txt
+│
+├── logs/                       # Application logs
+│   └── app.log
+│
+└── models/                     # Saved models & indices
+    ├── faiss_index.index       # FAISS vector index
+    ├── faiss_index.docs        # Document metadata
+    └── online_cache.pkl        # Cached online searches
 ```
 
 ---
 
-## 🔧 Troubleshooting
+## 🧪 Testing
 
-### Issue: "No suggestions appearing"
+### Run Unit Tests
 
-**Solutions:**
-1. Check that index is built and loaded
-2. Verify assistant is running (green status)
-3. Ensure you have documents in `data` folder
-4. Check logs in `logs/app.log`
-
-### Issue: "Import errors"
-
-**Solutions:**
-```powershell
-pip install --upgrade pip
-pip install -r requirements.txt --force-reinstall
+```bash
+pytest tests/ -v
 ```
 
-### Issue: "LLM model not found"
+### Test Coverage
 
-**Solutions:**
-1. Let it auto-download on first run
-2. Or manually download from https://gpt4all.io/
-3. Place in `models/` folder
-4. Update `config.yaml` with correct filename
+```bash
+pytest tests/ --cov=. --cov-report=html
+```
 
-### Issue: "High memory usage"
+### Manual Testing
 
-**Solutions:**
-1. Use smaller LLM model (e.g., `orca-mini-3b`)
-2. Reduce `chunk_size` in config
-3. Limit number of documents
-4. Close other applications
-
-### Issue: "Slow suggestions"
-
-**Solutions:**
-1. Reduce `rag.top_k_results` in config
-2. Use CPU-optimized model
-3. Reduce `max_tokens` for faster generation
-4. Consider upgrading hardware
+1. Load the sample documents from `data/`
+2. Type "Python programming" → Should suggest Python-related content
+3. Type "machine learning" → Should suggest ML-related content
+4. Select text and use Generate button
 
 ---
 
-## 🎯 Performance Tips
+## 🔧 Configuration Reference
 
-### For Best Performance:
+### `config.yaml` Sections
 
-1. **Use SSD** for faster index loading
-2. **8GB+ RAM** for comfortable operation
-3. **GPU** (optional): Set `device: "cuda"` in config
-4. **Smaller models**: Trade quality for speed
-5. **Limit documents**: Start with ~50-100 documents
-
-### Optimization Settings:
-
+#### Documents
 ```yaml
-performance:
-  use_gpu: false              # Enable if you have NVIDIA GPU
-  num_threads: 4              # CPU cores to use
-  cache_embeddings: true      # Faster repeated queries
+documents:
+  folder_path: "./data"              # Where to scan for documents
+  supported_formats: [pdf, docx, txt]
+  chunk_size: 512                     # Characters per chunk
+  chunk_overlap: 50                   # Overlap between chunks
 ```
 
----
-
-## 🛠️ Advanced Features
-
-### Custom LLM Models
-
-You can use other GPT4All models:
-
-1. Download from https://gpt4all.io/
-2. Supported formats: `.gguf`, `.bin`
-3. Update `config.yaml`:
-
+#### Embedding Model
 ```yaml
-llm:
-  model_name: "your-model-name.gguf"
+embedding:
+  model_name: "sentence-transformers/all-MiniLM-L6-v2"
+  device: "cpu"                       # Use "cuda" for GPU
+  batch_size: 32
 ```
 
-### Keyboard Shortcuts
-
-| Key | Action |
-|-----|--------|
-| `TAB` | Accept suggestion |
-| `ESC` | Dismiss suggestion |
-| `↑` | Previous suggestion |
-| `↓` | Next suggestion |
-
-### Multiple Suggestions
-
-The overlay shows up to 3 alternative suggestions. Navigate with arrow keys.
-
----
-
-## 📊 System Requirements
-
-### Minimum:
-- CPU: Dual-core 2.0 GHz
-- RAM: 4 GB
-- Storage: 2 GB free
-- OS: Windows 10
-
-### Recommended:
-- CPU: Quad-core 2.5 GHz+
-- RAM: 8 GB+
-- Storage: 5 GB free (SSD)
-- OS: Windows 10/11
-- GPU: NVIDIA (optional, for CUDA)
-
----
-
-## 🐛 Known Limitations
-
-1. **Windows Only**: Currently optimized for Windows (Linux/Mac support planned)
-2. **LLM Speed**: Generation may take 1-3 seconds on CPU
-3. **Text Insertion**: Suggestions are shown but not auto-inserted (requires additional permissions)
-4. **Language**: Best performance with English documents
-5. **Context Window**: Limited to last 200 characters
-
----
-
-## 🔮 Future Enhancements
-
-- [ ] Auto-insert accepted suggestions
-- [ ] Multi-language support
-- [ ] Llama.cpp backend option
-- [ ] Cloud sync for index
-- [ ] Chrome extension version
-- [ ] Voice input support
-- [ ] Advanced filtering options
-- [ ] Export/import settings
-
----
-
-## 📝 Logs & Debugging
-
-Logs are stored in `logs/app.log`:
-
-```powershell
-# View latest logs
-Get-Content .\logs\app.log -Tail 50
-
-# Monitor logs in real-time
-Get-Content .\logs\app.log -Wait
+#### Vector Store
+```yaml
+vector_store:
+  index_path: "./models/faiss_index"
+  dimension: 384                      # Must match model
+  metric: "cosine"
 ```
 
-Log levels in [config.yaml](config.yaml):
-- `DEBUG`: Verbose output
-- `INFO`: Normal operation (default)
-- `WARNING`: Issues that don't stop execution
-- `ERROR`: Serious problems
+#### Retrieval
+```yaml
+retrieval:
+  top_k_results: 5                    # Results to return
+  similarity_threshold: 0.3           # Minimum similarity (0.0-1.0)
+  max_context_length: 1500            # Max chars in context
+```
+
+#### Suggestion Engine
+```yaml
+suggestion:
+  context_window_size: 100            # Last N chars to analyze
+  trigger_threshold: 3                # Min chars to trigger
+  debounce_ms: 500                    # Wait time after typing
+```
+
+#### Online Search
+```yaml
+online_search:
+  enabled: true
+  cache_enabled: true                 # Cache Wikipedia results
+  cache_path: "./models/online_cache.pkl"
+  max_results: 3
+```
 
 ---
 
-## 🤝 Contributing
+## 🐛 Troubleshooting
 
-This is a complete working system. Feel free to:
-- Report bugs
-- Suggest features
-- Submit improvements
-- Share your experience
+### Issue: Model download fails
+
+**Solution**: Check internet connection. The model (~80MB) downloads on first run.
+
+```bash
+# Manually download model
+python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+```
+
+### Issue: FAISS installation fails
+
+**Solution**: Install via conda:
+
+```bash
+conda install -c conda-forge faiss-cpu
+```
+
+### Issue: UI doesn't respond
+
+**Solution**: Check logs at `logs/app.log`. Ensure PySide6 is installed correctly.
+
+### Issue: No suggestions appear
+
+**Solution**: 
+1. Verify documents are loaded (status shows "✅ Documents loaded")
+2. Check similarity threshold in `config.yaml` (try lowering to 0.2)
+3. Ensure you've typed enough context (>10 characters)
+
+---
+
+## 🚀 Future Improvements
+
+### Short-term Enhancements
+- [ ] Add support for more file formats (Markdown, HTML, RTF)
+- [ ] Implement keyboard shortcuts for accepting suggestions
+- [ ] Add dark mode UI theme
+- [ ] Export/import index for faster startup
+
+### Medium-term Features
+- [ ] Fine-tune local LLM for better text generation
+- [ ] Multi-workspace support (project-specific knowledge)
+- [ ] Browser extension for web-based editors
+- [ ] Collaborative knowledge sharing
+
+### Long-term Vision
+- [ ] VS Code extension integration
+- [ ] Real-time collaborative editing
+- [ ] Custom domain-specific models
+- [ ] Cloud sync for enterprise deployment
 
 ---
 
@@ -390,31 +417,54 @@ This project is provided as-is for educational and personal use.
 
 ## 🙏 Acknowledgments
 
-Built with:
-- **sentence-transformers**: Semantic embeddings
-- **FAISS**: Vector similarity search
-- **GPT4All**: Local LLM inference
-- **PyQt5**: Desktop UI framework
-- **pynput**: Global keyboard monitoring
+### Technologies Used
+
+- **sentence-transformers**: Embedding generation
+- **FAISS**: Fast similarity search
+- **PySide6**: Modern Qt bindings
 - **PyMuPDF**: PDF processing
-- **python-docx**: Word document parsing
+- **python-docx**: Word document handling
+- **Wikipedia API**: Online fallback
 
 ---
 
 ## 📞 Support
 
-For issues, check:
-1. This README
-2. [config.yaml](config.yaml) documentation
-3. Log files in `logs/`
-4. Error messages in UI
+For issues or questions:
+
+1. Check `logs/app.log` for error details
+2. Review configuration in `config.yaml`
+3. Ensure all dependencies are installed
+4. Test with sample documents first
 
 ---
 
-<div align="center">
+**Built with ❤️ for local-first AI assistance**
 
-**Built with ❤️ for offline-first AI assistance**
+---
 
-*Happy Writing! ✍️*
+## Quick Start Guide
 
-</div>
+### First-Time Setup (5 minutes)
+
+1. **Install**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. **Run**:
+   ```bash
+   python app.py
+   ```
+
+3. **Load Samples**:
+   - Click "📁 Load Documents"
+   - Select the `data/` folder
+   - Wait ~30 seconds for indexing
+
+4. **Try It**:
+   - Type: "Python is used for"
+   - See suggestions appear!
+   - Select text → Click "✨ Generate"
+
+**That's it! You're ready to go.** 🎉
