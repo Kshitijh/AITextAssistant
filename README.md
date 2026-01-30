@@ -27,15 +27,26 @@
 
 ## 🎯 Overview
 
-AI Text Assistant is a **local-first intelligent writing assistant** similar to GitHub Copilot, but trained exclusively on your personal documents. It provides real-time text suggestions and content generation based on semantic understanding of your document library, with online search as a secondary fallback.
+AI Text Assistant is a **local-first intelligent writing assistant** that combines the power of AI with your personal document library. Unlike cloud-based tools, everything runs on your machine - your documents, your data, complete privacy.
 
 ### What Makes It Special?
 
-- 🔒 **Privacy-Focused**: All processing happens locally on your machine
-- 📚 **Your Documents**: Learn from YOUR content, not generic data
-- ⚡ **Fast**: Sub-200ms similarity search using FAISS
-- 🎯 **Smart Priority**: Local documents always take precedence over online sources
-- 🖥️ **Easy to Use**: Simple desktop interface, no command-line needed
+- 🤖 **Real AI Generation**: Uses local LLMs (TinyLlama, Phi-3, Mistral) via llama.cpp for intelligent text completion
+- 🔒 **Privacy-Focused**: All processing happens locally - no cloud, no data leaks, completely offline
+- 📚 **Your Documents**: Learns from YOUR content using RAG (Retrieval Augmented Generation)
+- ⚡ **Lightweight**: Uses scikit-learn for embeddings - no PyTorch, no heavy dependencies
+- 🎯 **Smart Architecture**: Retrieves relevant context → Generates with AI → Falls back gracefully
+- 🖥️ **Easy to Use**: Simple desktop interface, no command-line expertise needed
+
+### How It Works
+
+1. **Add your documents** (PDFs, Word docs, text files)
+2. **System builds a searchable index** using TF-IDF embeddings
+3. **As you type**, it retrieves relevant content from your docs
+4. **AI model generates completions** based on that context
+5. **You get intelligent suggestions** in real-time, tailored to your knowledge base
+
+**Think of it as:** GitHub Copilot + Your Documents + Complete Privacy
 
 ---
 
@@ -44,18 +55,21 @@ AI Text Assistant is a **local-first intelligent writing assistant** similar to 
 ### Core Capabilities
 
 - 📚 **Document Ingestion**: Automatically index PDF, DOCX, and TXT files
-- 🧠 **Semantic Search**: Uses sentence-transformers for high-quality embeddings
-- ⚡ **Real-time Suggestions**: Copilot-style autocomplete as you type (shows 5 suggestions with 2-3 sentences each)
-- ✍️ **Text Refinement**: Select text and refine, expand, or get alternatives
-- 🎯 **Local-First Architecture**: Prioritizes your documents over online sources
-- 🌐 **Smart Fallback**: Only uses Wikipedia when local data is insufficient
+- 🧠 **Semantic Understanding**: Uses TF-IDF embeddings for document analysis
+- 🤖 **AI Text Generation**: Powered by local LLMs (via llama.cpp) for intelligent completions
+- ⚡ **Real-time Suggestions**: Copilot-style autocomplete as you type (shows 5 AI-generated suggestions)
+- ✍️ **Text Refinement**: Select text and refine, expand, or get alternatives using AI
+- 🎯 **Local-First Architecture**: Everything runs offline - no cloud, no data leaks
+- 🌐 **Smart Fallback**: Template-based suggestions when AI model not available
 - 🖥️ **Desktop UI**: Clean PySide6-based interface with progress tracking
 
 ### Advanced Features
 
-- **Semantic Chunking**: Intelligently splits documents at sentence/paragraph boundaries
+- **RAG (Retrieval Augmented Generation)**: Retrieves relevant documents, then generates AI suggestions
+- **Multi-Model Support**: Works with TinyLlama, Phi-3, Mistral, or any GGUF model
+- **Intelligent Fallback Chain**: AI Generation → Template Matching → Online Search
 - **Source Attribution**: Each suggestion shows which document it came from
-- **Cached Results**: Minimizes API calls to online sources
+- **Lightweight Architecture**: scikit-learn for embeddings, minimal dependencies
 - **Debounced Input**: Efficient processing without overwhelming the system
 - **Background Indexing**: Non-blocking UI during document processing
 - **Comprehensive Logging**: Track all searches with similarity scores
@@ -83,15 +97,20 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**First-time setup takes 3-5 minutes** (downloads ~600MB of packages including the embedding model)
+**First-time setup takes 2-3 minutes** (lightweight dependencies)
 
-### 2. Verify Installation
+### 2. Setup AI Model (Optional but Recommended)
 
 ```bash
-python verify_installation.py
+python train_ai.py
 ```
 
-You should see all checks passing ✅
+This will:
+- ✅ Verify llama-cpp-python is installed
+- 📥 Guide you to download an AI model (TinyLlama, Phi-3, or Mistral)
+- 🧠 Process your documents for AI understanding
+
+**Without an AI model**, the system uses smart template-based suggestions (still works great!)
 
 ### 3. Run the Application
 
@@ -108,17 +127,17 @@ python app.py
 
 ### 5. Try It Out!
 
-**Test Suggestions:**
+**Test AI Suggestions:**
 - Type: `"Python is used for"`
 - Wait 500ms
-- See 5 detailed suggestions appear in the right panel!
+- See 5 AI-generated suggestions appear in real-time!
 
 **Test Generate Button:**
 - Type: `"ML is good"`
 - Select the text
 - Click **"✨ Generate"** button that appears
 - Choose **"Refine Text"**
-- Watch it transform!
+- Watch AI transform your text!
 
 **🎉 That's it! You're ready to go.**
 
@@ -187,63 +206,102 @@ pip install -r requirements.txt
 ```
 
 **What gets installed:**
-- `sentence-transformers` - Embedding model (~400MB)
-- `faiss-cpu` - Fast similarity search
+- `scikit-learn` - Lightweight ML for TF-IDF embeddings
+- `llama-cpp-python` - Local LLM inference engine
 - `PySide6` - Desktop UI framework
 - `PyMuPDF` - PDF processing
 - `python-docx` - Word document handling
-- `wikipedia` - Online fallback
+- `pynput` - Global keystroke capture
 - Other utilities
 
-**Total download:** ~600MB  
-**Installation time:** 3-5 minutes
+**Total download:** ~150MB (excluding AI model)  
+**Installation time:** 2-3 minutes
 
-#### 5. Verify Installation
+#### 5. Setup AI Model (Recommended)
 
 ```bash
-python verify_installation.py
+python train_ai.py
 ```
 
-**Expected output:**
-```
-✓ PASS: Python Version
-✓ PASS: Dependencies
-✓ PASS: Project Structure
-✓ PASS: Sample Data
+This interactive script will:
+1. Check if llama-cpp-python is installed
+2. Check for AI models in the `models/` folder
+3. Guide you to download a model if needed
 
-🎉 All checks passed! You're ready to run the application.
+**Recommended Models:**
+
+| Model | Size | Speed | Quality | Download |
+|-------|------|-------|---------|----------|
+| **TinyLlama** | 700MB | ⚡⚡⚡ Fast | ⭐⭐ Good | [Download](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF) |
+| **Phi-3 Mini** | 2GB | ⚡⚡ Medium | ⭐⭐⭐ Best | [Download](https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf) |
+| **Mistral 7B** | 4GB | ⚡ Slow | ⭐⭐⭐⭐ Excellent | [Download](https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF) |
+
+**Download the `.gguf` file and place it in the `models/` folder.**
+
+> 💡 **Note:** The system works without an AI model using template-based suggestions, but AI generation provides much better results!
+
+#### 6. Verify Installation
+
+Run the app and check if everything works:
+```bash
+python app.py
 ```
+
+You should see the desktop interface open successfully.
 
 #### Common Installation Issues
 
-**Issue: FAISS installation fails**
+**Issue: llama-cpp-python installation fails**
 
-Solution (use conda):
+Solution: Try installing from conda-forge:
 ```bash
-conda install -c conda-forge faiss-cpu
-pip install -r requirements.txt
+conda install -c conda-forge llama-cpp-python
 ```
 
-**Issue: "No module named 'sentence_transformers'"**
+Or use pre-built wheels from PyPI:
+```bash
+pip install llama-cpp-python --upgrade --force-reinstall --no-cache-dir
+```
+
+**Issue: "No module named 'sklearn'"**
 
 Solution:
 ```bash
-pip install sentence-transformers --no-cache-dir
+pip install scikit-learn
 ```
 
-**Issue: Torch installation is slow**
+**Issue: PySide6 import error**
 
-Solution: This is normal, PyTorch is large (~800MB). Be patient or use a faster internet connection.
+Solution:
+```bash
+pip install PySide6 --upgrade
+```
 
 ---
 
 ## 📖 How to Use
 
+### Setting Up AI (First Time)
+
+1. **Run the Setup Script**
+   ```bash
+   python train_ai.py
+   ```
+
+2. **Download an AI Model (if not already done)**
+   - The script will guide you to download a GGUF model
+   - Recommended: **Phi-3 Mini** (2GB, best balance)
+   - Place the `.gguf` file in the `models/` folder
+
+3. **Process Your Documents**
+   - The script will ask if you want to process documents
+   - Or add documents later via the app UI
+
 ### Loading Documents
 
 1. **Prepare Your Documents**
    - Supported formats: PDF, DOCX, TXT
-   - Place them in any folder
+   - Place them in the `data/` folder or any folder
    - No size limit, but start with 10-50 documents
 
 2. **Load into Application**
@@ -257,38 +315,51 @@ Solution: This is normal, PyTorch is large (~800MB). Be patient or use a faster 
    - Number of chunks displayed in logs
    - Index saved to `models/` folder
 
-### Getting Real-Time Suggestions
+### Getting AI-Powered Suggestions
+
+The system uses **RAG (Retrieval Augmented Generation)**:
+1. Retrieves relevant content from your documents
+2. Feeds context to the AI model
+3. Generates intelligent, context-aware suggestions
+
+**How It Works:**
 
 1. **Start Typing** in the editor
 2. **Wait 500ms** (debounce delay)
-3. **See 5 Suggestions** appear in right panel
-   - Each shows 2-3 sentences
-   - Includes source file name
-   - Based on semantic similarity
+3. **AI Generates 5 Suggestions** in real-time
+   - Each suggestion is 2-3 sentences
+   - Based on your documents + AI understanding
+   - Includes source file attribution
 
 4. **Suggestion Format:**
    ```
-   ━━━ Suggestion 1 ━━━
+   ━━━ AI Suggestion 1 ━━━
    [From: sample_python.txt]
-   Python is a high-level, interpreted programming language known for 
-   its simplicity and readability. It was created by Guido van Rossum 
-   and first released in 1991. Python is widely used in web development.
+   Python is a high-level, interpreted programming language designed 
+   for readability and simplicity. It excels in data science, web 
+   development, and automation tasks, making it one of the most 
+   versatile languages for modern software development.
    ```
+
+**Fallback Modes:**
+- ✅ **With AI Model**: Uses LLM for intelligent generation
+- 📝 **Without AI Model**: Uses template-based pattern matching
+- 🌐 **No Local Match**: Falls back to online search (if enabled)
 
 ### Using the Generate Button
 
 1. **Select Text** in the editor
 2. **Click "✨ Generate"** button that appears
 3. **Choose Action:**
-   - **✍️ Refine Text**: Improve clarity and quality
-   - **📝 Expand Text**: Add more detail from similar content
-   - **🔄 Get Alternatives**: See different phrasings
+   - **✍️ Refine Text**: AI improves clarity and quality
+   - **📝 Expand Text**: AI adds more detail from documents
+   - **🔄 Get Alternatives**: AI generates different phrasings
 
 4. **Review & Accept** - Text is automatically replaced
 
 ### Toggle Suggestions
 
-Click **"💡 Suggestions: ON/OFF"** to enable/disable real-time suggestions.
+Click **"💡 Suggestions: ON/OFF"** to enable/disable real-time AI suggestions.
 
 ---
 
@@ -314,9 +385,57 @@ Click **"💡 Suggestions: ON/OFF"** to enable/disable real-time suggestions.
 ┌───────────────┐  ┌──────────────┐  ┌─────────────────┐
 │  Ingestion    │  │  Embeddings  │  │   Retrieval     │
 │  ┌─────────┐  │  │  ┌────────┐  │  │  ┌───────────┐  │
-│  │PDF Read │  │  │  │Embedder│  │  │  │Local Src  │  │
-│  │DOCX Read│  │  │  │Vector  │  │  │  │Online Src │  │
-│  │Chunker  │  │  │  │Store   │  │  │  │Ranker     │  │
+│  │PDF Read │  │  │  │TF-IDF  │  │  │  │Local Src  │  │
+│  │DOCX Read│  │  │  │Embedder│  │  │  │Online Src │  │
+│  │Chunker  │  │  │  │sklearn │  │  │  │Ranker     │  │
+│  └─────────┘  │  │  │Vector  │  │  │  └───────────┘  │
+│               │  │  │Store   │  │  │                 │
+└───────────────┘  └──────────────┘  └─────────────────┘
+                                              │
+                           ┌──────────────────┘
+                           ▼
+                   ┌─────────────────┐
+                   │  AI Generation  │
+                   │  ┌───────────┐  │
+                   │  │Llama.cpp  │  │
+                   │  │GGUF Model │  │
+                   │  │RAG Engine │  │
+                   │  └───────────┘  │
+                   └─────────────────┘
+```
+
+### RAG (Retrieval Augmented Generation) Flow
+
+```
+User Types → "Python is used for"
+     ↓
+1. Document Retrieval
+   ├─ TF-IDF Embedding of query
+   ├─ Search vector store (sklearn NearestNeighbors)
+   └─ Get top 3-5 relevant document chunks
+     ↓
+2. Context Building
+   ├─ Combine retrieved chunks
+   ├─ Format as prompt context
+   └─ Include user's partial text
+     ↓
+3. AI Generation
+   ├─ Load local LLM (GGUF model via llama.cpp)
+   ├─ Generate with context: "Based on: [doc chunks]... Complete: Python is used for"
+   └─ Generate 5 varied suggestions (different temperatures)
+     ↓
+4. Post-Processing
+   ├─ Filter quality/length
+   ├─ Add source attribution
+   └─ Return to UI
+```
+
+### Component Details
+
+#### 1. Document Ingestion (`ingestion/`)
+- **DocumentProcessor**: Loads PDF, DOCX, TXT files
+- **Chunker**: Splits into semantic chunks (sentences/paragraphs)
+- **Metadata**: Tracks source files, page numbers
 │  └─────────┘  │  │  └────────┘  │  │  └───────────┘  │
 └───────────────┘  └──────────────┘  └─────────────────┘
                            │

@@ -1,114 +1,6 @@
 """
 Autocomplete Module
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-AI model just makes it even smarter! 🚀- Shows contextual suggestions- Retrieves relevant text from your documents- Uses intelligent template matchingThe system still works great without downloading a model!### Without AI Model- Close other applications- Use Q4_K_M quantization (smaller)**Out of memory**- Reduce max_tokens in config- Use a smaller model (TinyLlama)**Slow suggestions**- Ensure .gguf file is in models/ folder- Check file path in config.yaml**Error: "Model not found"**### Troubleshooting- **Temperature 0.9** = Creative, diverse- **Temperature 0.5** = Conservative, predictable- **Larger model** = Better quality, slower- **Smaller model** = Faster response, less accurate### Performance Tips4. Watch AI-powered suggestions appear!3. Start typing in any application2. Build the index1. Load your documentsThen:```python app.py```powershellAfter setup, run:### Testing✅ **Fallback**: Works without model (template-based mode)  ✅ **Smart**: Understands context and generates natural text  ✅ **Private**: No data sent to cloud  ✅ **Fast**: Runs locally on CPU  ✅ **Context-Aware**: Uses your documents for relevant suggestions  ### Features4. **You see**: Intelligent, contextual suggestion!3. **AI generates**: "artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed."2. **System retrieves**: Relevant content from your documents (RAG)1. **You type**: "Machine learning is a branch of"### How It Works```  top_p: 0.9  top_k: 40  max_tokens: 100   # Response length  temperature: 0.7  # Creativity (0.0-1.0)  model_path: "./models/YOUR_MODEL_NAME.gguf"llm:```yaml4. **Update config.yaml**:```D:\Workspace\AITextAssistant\models\# Copy the downloaded .gguf file to:```powershell3. **Place the model file**:```# Download: mistral-7b-instruct-v0.2.Q4_K_M.gguf# Visit: https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/tree/main# Download Mistral 7B - highest quality```powershell#### Option C: Best Quality (~4GB)```# Download: Phi-3-mini-4k-instruct-q4.gguf# Visit: https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-gguf/tree/main# Download Phi-3 Mini - excellent quality```powershell#### Option B: Recommended Model (Balanced, ~2GB)```# Download: TinyLlama-1.1B-Chat-v1.0.Q4_K_M.gguf# Visit: https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/tree/main# Download TinyLlama - great for quick responses```powershell#### Option A: Tiny Model (Fast, ~700MB)2. **Download a model** (choose one):```pip install llama-cpp-python```powershell1. **Install the AI library**:### Quick SetupYour AI Text Assistant can now generate intelligent text completions using a local AI model!## 🤖 Enable AI Text GenerationProvides real-time text suggestions based on context with AI generation.
+Provides real-time text suggestions based on context with AI generation.
 """
 
 from typing import List, Optional
@@ -248,7 +140,7 @@ class Autocomplete:
         query = context[-self.context_window:].strip()
         
         # Try to find last complete sentence
-        for delimiter in ['. ', '! ', '? ', '\n']:
+        for delimiter in ['. ', '! ', '? ', '\\n']:
             if delimiter in query:
                 parts = query.split(delimiter)
                 if parts[-1].strip():
@@ -301,7 +193,7 @@ class Autocomplete:
                     metadata = result.get('metadata', {})
                     source_file = metadata.get('file_name', '')
                     if source_file:
-                        suggestion = f"[From: {source_file}]\n{suggestion}"
+                        suggestion = f"[From: {source_file}]\\n{suggestion}"
                     return suggestion
             
             return None
